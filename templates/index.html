@@ -11,6 +11,7 @@
   {% if count > 0 %}
   <form action="{{ path('archive-move') }}" method="post">
     <input type="hidden" name="files" value="{{ files }}" />
+    <input type="hidden" name="sideFiles" value="{{ sideFiles }}" />
     <button type="submit" name="submit" class="btn btn-primary btn-sm">Archive images</button>
   </form>
   {% endif %}
@@ -20,9 +21,9 @@
     <div class="thumbnail">
       <a href="/images/{{ image.url }}">
       {% if hasLazyImageLoading %}
-        <img data-src="{{ app.url_generator.generate('thumbnail', {file: image.url}) }}" src="/img/blank.png" width="{{ image.thumbnailWidth }}" height="{{ image.thumbnailHeight }}" alt="{{ image.url }}">
+        <img data-src="{{ app.url_generator.generate('thumbnail', {file: image.internalUrl}) }}" src="/img/blank.png" alt="{{ image.url }}">
       {% else %}
-        <img src="{{ app.url_generator.generate('thumbnail', {file: image.url}) }}" width="{{ image.thumbnailWidth }}" height="{{ image.thumbnailHeight }}" alt="{{ image.url }}">
+        <img src="{{ app.url_generator.generate('thumbnail', {file: image.internalUrl}) }}" alt="{{ image.url }}">
       {% endif %}
       </a>
       <div class="caption">{{ image.timestamp }}</div>

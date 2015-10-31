@@ -24,7 +24,9 @@
           </div>
           <div class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
-              <li{% if app.request.requestUri == path('archive-display') %} class="active"{% endif %}><a href="{{ path('archive-display') }}">Archive</a></li>
+              {% for subfolder in subfolders %}
+                <li><a href="?folder={{ subfolder.path }}">{{ subfolder.label }}</a></li>
+              {% endfor %}
             </ul>
           </div>
         </div>

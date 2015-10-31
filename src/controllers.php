@@ -7,13 +7,18 @@ use Symfony\Component\HttpFoundation\Response;
 $app->get('/', function (Request $request) use ($app) {
 
   $thumbnailService = $app['thumbnail_service'];
-  $thumbnailService->retrieve($app['config']['imagesPath']);
+  $subfolder = $request->get('folder');
+  $imagesPath = $app['config']['imagesPath'];
+  $imageTimestampFunction = $app['config']['imageTimestampFunction'];
+  $thumbnailService->retrieve($imagesPath, $imageTimestampFunction, $subfolder);
 
   $data = array(
     'images'              => $thumbnailService->getImages(),
     'count'               => $thumbnailService->getImagesCount(),
     'latestTimestamp'     => $thumbnailService->getLatestTimestamp(),
     'files'               => $thumbnailService->getFileNames(),
+    'sideFiles'           => $thumbnailService->getSideFileNames(),
+    'subfolders'          => $thumbnailService->getSubfolders($imagesPath),
     'hasLazyImageLoading' => $app['config']['lazyImageLoading'],
   );
 
@@ -44,37 +49,26 @@ $app->post('/archive/', function (Request $request) use ($app) {
   $files = $request->get('files');
   $filenames = explode(',', $files);
 
+  $sideFiles = $request->get('sideFiles');
+  $sideFilenames = explode(',', $sideFiles);
+
   $thumbnailService = $app['thumbnail_service'];
   $thumbnailService->moveToArchive($filenames, $sourceDir, $destinationDir);
+  $thumbnailService->moveToArchive($sideFilenames, $sourceDir, $destinationDir);
 
   return $app->redirect($app['url_generator']->generate('homepage')); 
 })
 ->bind('archive-move');
-
-// archive display
-$app->get('/archive/', function (Request $request) use ($app) {
-
-  $thumbnailService = $app['thumbnail_service'];
-  $thumbnailService->retrieve($app['config']['imagesArchivePath']);
-
-  $data = array(
-    'images'              => $thumbnailService->getImages(),
-    'count'               => $thumbnailService->getImagesCount(),
-    'hasLazyImageLoading' => $app['config']['lazyImageLoading'],
-  );
-
-  return $app['twig']->render('archive.html', $data);
-})
-->bind('archive-display');
 
 // cleanup archived images (cronjob)
 $app->get('/cleanup/', function (Request $request) use ($app) {
 
   $archiveImagesPath = $app['config']['imagesArchivePath'];
   $thumbnailsPath = $app['config']['thumbnailsPath'];
+  $numberOfDaysToKeepWhenCleaning = $app['config']['numberOfDaysToKeepWhenCleaning'];
 
   $thumbnailService = $app['thumbnail_service'];
-  $filesCount = $thumbnailService->cleanup($archiveImagesPath, $thumbnailsPath);
+  $filesCount = $thumbnailService->cleanup($archiveImagesPath, $thumbnailsPath, $numberOfDaysToKeepWhenCleaning);
 
   return new Response(sprintf('Finished. %s images deleted.', $filesCount));
 })
